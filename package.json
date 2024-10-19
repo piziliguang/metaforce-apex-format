@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/piziliguang/metaforce-apex-format#readme",
   "dependencies": {
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "prettier": "^3.3.3",
+    "prettier-plugin-apex": "^2.1.5"
   }
 }
