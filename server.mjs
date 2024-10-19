@@ -4,15 +4,16 @@ import * as apexPrettierPlugin from "prettier-plugin-apex";
 const app = express();
 const port = 3000;
 
-app.get('/', async (req, res) => {
-    let result = {};
+app.post('/', async (req, res) => {
+    let { apexCode, prettierOptions } = req.body || {}, result = {};
     try {
-        let formatted = await prettier.format('public class Test{ Integer i = 1; }', { semi: true, tabWidth: 4, printWidth: 120, parser: 'apex', plugins: [apexPrettierPlugin] })
+        let formatted = await prettier.format(apexCode, { semi: true, tabWidth: 4, printWidth: 120, ...options, parser: prettierOptions.anonymous ? 'apex-anonymous' : 'apex', plugins: [apexPrettierPlugin] })
         result = { isSucceeded: true, formatted };
     } catch (ex) {
-        result = { isSucceeded: true, formatted: ex.message };
+        result = { isSucceeded: false, formatted: ex.message };
     }
-    res.send('Welcome to my server!' + JSON.stringify(result));
+    //res.setHeader('Content-Type', 'application/json');
+    res.json(result);
 });
 
 app.listen(port, () => {
