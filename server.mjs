@@ -6,6 +6,7 @@ const port = 3000;
 
 app.post('/', async (req, res) => {
     let { apexCode, prettierOptions } = req.body || {}, result = {};
+    console.log(req.body)
     if (!prettierOptions) prettierOptions = {};
 
     try {
