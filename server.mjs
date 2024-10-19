@@ -1,6 +1,6 @@
 import express from "express";
 import prettier from "prettier";
-import apexPrettierPlugin from "prettier-plugin-apex";
+import * as apexPrettierPlugin from "prettier-plugin-apex";
 const app = express();
 const port = 3000;
 
