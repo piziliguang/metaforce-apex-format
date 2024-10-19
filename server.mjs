@@ -10,7 +10,7 @@ app.get('/', async (req, res) => {
         let formatted = await prettier.format('public class Test{ Integer i = 1; }', { semi: true, tabWidth: 4, printWidth: 120, parser: 'apex', plugins: [apexPrettierPlugin] })
         result = { isSucceeded: true, formatted };
     } catch (ex) {
-        result = { isSucceeded: true, formatted: ex.getMessage() };
+        result = { isSucceeded: true, formatted: ex.message };
     }
     res.send('Welcome to my server!' + JSON.stringify(result));
 });
