@@ -1,10 +1,10 @@
 import express from "express";
-
+import prettier from "prettier";
+import apexPrettierPlugin from "prettier-plugin-apex";
 const app = express();
 const port = 3000;
 
-app.get('/', async (req, res) => {
-    let prettier = await import('prettier'), apexPrettierPlugin = await import('prettier-plugin-apex');
+app.get('/', (req, res) => {
     let result = {};
     try {
         let formatted = prettier.format('public class Test{ Integer i = 1; }', { semi: true, tabWidth: 4, printWidth: 120, parser: 'apex', plugins: [apexPrettierPlugin] })
