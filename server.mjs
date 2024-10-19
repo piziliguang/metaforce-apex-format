@@ -5,12 +5,10 @@ import * as apexPrettierPlugin from "prettier-plugin-apex";
 
 const port = 3000;
 const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
+const jsonParser = bodyParser.json();
 
-app.post('/', async (req, res) => {
+app.post('/apex/format', jsonParser, async (req, res) => {
     let { apexCode, prettierOptions } = req.body || {}, result = {};
-    console.log(req.body)
-    bodyParser
     if (!prettierOptions) prettierOptions = {};
 
     try {
