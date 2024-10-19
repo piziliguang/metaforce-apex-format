@@ -12,7 +12,7 @@ app.get('/', async (req, res) => {
     } catch (ex) {
         result = { isSucceeded: true, formatted: ex.getMessage() };
     }
-    res.send('Welcome to my server!', JSON.stringify(result));
+    res.send('Welcome to my server!' + JSON.stringify(result));
 });
 
 app.listen(port, () => {
