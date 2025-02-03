@@ -3,7 +3,7 @@ import bodyParser from "body-parser"
 import prettier from "prettier";
 import * as apexPrettierPlugin from "prettier-plugin-apex";
 
-import { TongYi } from './openAI'
+import { TongYi } from './openAI.js'
 
 const port = 3000;
 const app = express();
