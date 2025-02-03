@@ -22,7 +22,7 @@ async function requestAI ({ model, messages, isPartial }) {
     }
 }
 
-export const TongYi = {
+const TongYi = {
     async completeApex (code) {
         return await requestAI({
             model: "qwen-coder-plus",
@@ -75,3 +75,5 @@ export const TongYi = {
         });
     },
 }
+
+export { TongYi }

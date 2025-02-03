@@ -3,8 +3,6 @@ import bodyParser from "body-parser"
 import prettier from "prettier";
 import * as apexPrettierPlugin from "prettier-plugin-apex";
 
-import { TongYi } from './openAI.js'
-
 const port = 3000;
 const app = express();
 const jsonParser = bodyParser.json();
@@ -24,6 +22,7 @@ app.post('/apex/format', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/tongyi', jsonParser, async (req, res) => {
+    let { TongYi } = await import('./openAI.js');
     let { method, code } = req.body || {}, result = {};
 
     try {
