@@ -33,6 +33,7 @@ app.post('/ai/tongyi', jsonParser, async (req, res) => {
             result.code = await TongYi.documentCode(code);
         } else {
             result.isSucceeded = false;
+            result.code = 'AI service is not available yet, stay tuned.';
         }
     } catch (ex) {
         result = { isSucceeded: false, code: ex.message };
