@@ -34,7 +34,6 @@ app.post('/ai/tongyi', jsonParser, async (req, res) => {
         } else {
             result.isSucceeded = false;
         }
-        return result;
     } catch (ex) {
         result = { isSucceeded: false, formatted: ex.message };
     }
