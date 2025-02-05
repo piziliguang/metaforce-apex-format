@@ -38,8 +38,8 @@ app.post('/ai/tongyi', jsonParser, async (req, res) => {
     } catch (ex) {
         result = { isSucceeded: false, code: ex.message };
     }
-    res.setHeader('Content-Type', 'text/plain');
-    res.json(result);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(result);
 });
 
 app.listen(port, () => {
