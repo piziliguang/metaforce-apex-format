@@ -11,7 +11,7 @@ const openai = new OpenAI({
 async function requestAI ({ model, messages, isPartial }) {
     let completion = await openai.chat.completions.create({
         model, messages,
-        temperature: 0.2
+        temperature: 0
     });
 
     if (isPartial) {
