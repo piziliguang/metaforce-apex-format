@@ -18,9 +18,8 @@ async function requestAI ({ model, messages, isPartial }) {
         return completion.choices[0].message.content;
     } else {
         let newContent = completion.choices[0].message.content;
-        return newContent;
-        if (newContent.includes('[$$]')) {
-            return newContent;
+        if (newContent.includes('$$')) {
+            return newContent.split('$$')[1].replace(/^\n|\n$/g, '');
         } else {
             return newContent.split('\n').slice(1, -1).join('\n');
         }
@@ -37,7 +36,7 @@ const TongYi = {
 1. 检查代码中变量的命名是否有错别字，代码逻辑是否冗余。
 2. 尝试纠正并优化代码逻辑，不添加任何解释。
 3. 保持代码的原始格式和缩进。
-4. 返回优化之后的代码，并使用"[$]"包裹。` },
+5. 返回代码段，并使用"$$"包裹。例如：输入代码段 String a; 输出 $$String a;$$。` },
                 { "role": "user", "content": code }
             ]
         });
