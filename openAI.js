@@ -19,7 +19,7 @@ async function requestAI ({ model, messages, isPartial }) {
     } else {
         let newContent = completion.choices[0].message.content;
         if (newContent.includes('[$]')) {
-            return `|${newContent.split('[$]')[1]}|`;
+            return newContent;
         } else {
             return newContent.split('\n').slice(1, -1).join('\n');
         }
