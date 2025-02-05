@@ -18,7 +18,8 @@ async function requestAI ({ model, messages, isPartial }) {
         return completion.choices[0].message.content;
     } else {
         let newContent = completion.choices[0].message.content;
-        if (newContent.includes('[$]')) {
+        return newContent;
+        if (newContent.includes('[$$]')) {
             return newContent;
         } else {
             return newContent.split('\n').slice(1, -1).join('\n');
