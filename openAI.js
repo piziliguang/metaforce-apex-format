@@ -27,6 +27,7 @@ async function requestAI ({ model, messages, isPartial }) {
 }
 
 const TongYi = {
+
     async optimizeApex (code) {
         return await requestAI({
             model: "qwen-coder-plus",
@@ -37,6 +38,19 @@ const TongYi = {
 2. 尝试纠正并优化代码逻辑，不添加任何解释。
 3. 保持代码的原始格式和缩进。
 5. 返回代码段，并使用"-$$-"包裹。例如：输入代码段 String a; 输出 -$$-String a;-$$-。` },
+                { "role": "user", "content": code }
+            ]
+        });
+    },
+
+    async generateApexTest (code) {
+        return await requestAI({
+            model: "qwen-coder-plus",
+            messages: [
+                {
+                    "role": "system", "content": `你是一个salesforce apex 专家，为输入的Apex代码生成相应的测试类或测试方法。请按照以下规则处理输入的代码段：
+1. 分析输入的Apex代码，生成相应的测试类或者测试方法。
+2. 返回代码段，并使用"-$$-"包裹。例如：输入代码段 String a; 输出 -$$-String a;-$$-。` },
                 { "role": "user", "content": code }
             ]
         });

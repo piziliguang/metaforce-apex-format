@@ -31,6 +31,8 @@ app.post('/ai/tongyi', jsonParser, async (req, res) => {
             result.code = await TongYi.optimizeApex(code);
         } else if (method == 'documentCode') {
             result.code = await TongYi.documentCode(code);
+        } else if (method == 'generateApexTest') {
+            result.code = await TongYi.generateApexTest(code);
         } else {
             result.isSucceeded = false;
             result.code = 'AI service is not available yet, stay tuned.';
