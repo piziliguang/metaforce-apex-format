@@ -27,8 +27,8 @@ app.post('/ai/tongyi', jsonParser, async (req, res) => {
     let { method, code } = req.body || {}, result = {};
     try {
         result = { isSucceeded: true, code: '' };
-        if (method == 'optimizeApex') {
-            result.code = await TongYi.optimizeApex(code);
+        if (method == 'optimizeApex' || method == 'optimizeCode') {
+            result.code = await TongYi.optimizeCode(code);
         } else if (method == 'documentCode') {
             result.code = await TongYi.documentCode(code);
         } else if (method == 'generateApexTest') {
