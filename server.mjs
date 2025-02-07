@@ -3,7 +3,7 @@ import bodyParser from "body-parser"
 import prettier from "prettier";
 import * as apexPrettierPlugin from "prettier-plugin-apex";
 
-import { TongYi } from './openAI.js';
+import { AI_PROVIDER, AI_ACTION } from './openAI.js';
 
 const port = 3000;
 const app = express();
@@ -24,15 +24,28 @@ app.post('/apex/format', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/tongyi', jsonParser, async (req, res) => {
-    let { method, code } = req.body || {}, result = {};
+    console.log('start TongYi AI')
+    let { method, code } = req.body || {};
+    let result = await requestAI(AI_PROVIDER.TongYi, method, code);
+    res.json(result);
+});
+
+app.post('/ai/doubao', jsonParser, async (req, res) => {
+    console.log('start DouBao AI')
+    let { method, code } = req.body || {};
+    let result = await requestAI(AI_PROVIDER.DouBao, method, code);
+    res.json(result);
+});
+
+async function requestAI (aiProvider, method, code) {
+    let result = { isSucceeded: true, code: '' };
     try {
-        result = { isSucceeded: true, code: '' };
         if (method == 'optimizeApex' || method == 'optimizeCode') {
-            result.code = await TongYi.optimizeCode(code);
+            result.code = await AI_ACTION.optimizeCode(aiProvider, code);
         } else if (method == 'documentCode') {
-            result.code = await TongYi.documentCode(code);
+            result.code = await AI_ACTION.documentCode(aiProvider, code);
         } else if (method == 'generateApexTest') {
-            result.code = await TongYi.generateApexTest(code);
+            result.code = await AI_ACTION.generateApexTest(aiProvider, code);
         } else {
             result.isSucceeded = false;
             result.code = 'AI service is not available yet, stay tuned.';
@@ -40,9 +53,8 @@ app.post('/ai/tongyi', jsonParser, async (req, res) => {
     } catch (ex) {
         result = { isSucceeded: false, code: ex.message };
     }
-    //res.setHeader('Content-Type', 'application/json');
-    res.json(result);
-});
+    return result;
+}
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
