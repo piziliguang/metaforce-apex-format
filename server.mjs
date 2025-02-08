@@ -24,34 +24,32 @@ app.post('/apex/format', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/tongyi', jsonParser, async (req, res) => {
-    console.log('start TongYi AI')
-    let { method, code } = req.body || {};
-    let result = await requestAI(AI_PROVIDER.TongYi, method, code);
+    let { model, method, code } = req.body || {};
+    let result = await requestAI(AI_PROVIDER.TongYi, model, method, code);
     res.json(result);
 });
 
 app.post('/ai/doubao', jsonParser, async (req, res) => {
-    console.log('start DouBao AI')
     let { method, code } = req.body || {};
-    let result = await requestAI(AI_PROVIDER.DouBao, method, code);
+    let result = await requestAI(AI_PROVIDER.DouBao, model, method, code);
     res.json(result);
 });
 
-async function requestAI (aiProvider, method, code) {
+async function requestAI (aiProvider, model, method, code) {
     let result = { isSucceeded: true, code: '' };
     try {
         if (method == 'optimizeApex' || method == 'optimizeCode') {
-            result.code = await AI_ACTION.optimizeCode(aiProvider, code);
+            result.code = await AI_ACTION.optimizeCode(aiProvider, model, code);
         } else if (method == 'documentCode') {
-            result.code = await AI_ACTION.documentCode(aiProvider, code);
+            result.code = await AI_ACTION.documentCode(aiProvider, model, code);
         } else if (method == 'generateApexTest') {
-            result.code = await AI_ACTION.generateApexTest(aiProvider, code);
+            result.code = await AI_ACTION.generateApexTest(aiProvider, model, code);
         } else {
             result.isSucceeded = false;
             result.code = 'AI service is not available yet, stay tuned.';
         }
     } catch (ex) {
-        result = { isSucceeded: false, code: ex.message };
+        result = { isSucceeded: false, code: ex?.error?.message || ex?.message };
     }
     return result;
 }
