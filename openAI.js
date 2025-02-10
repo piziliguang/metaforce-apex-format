@@ -47,11 +47,12 @@ const AI_ACTION = {
             messages: [
                 {
                     "role": "system", "content": `You're a salesforce expert. You need to analyze and optimize salesforce code based on following rules：
-1. Optimize code logic by best practice, don't add any explanations.
+1. Optimize the code logic by following rules, then add explanation comment above the optimized line.
+   - if it's apex code, optimize it by java coding conventions.
+   - if it's javascript code, optimize it by javascript coding conventions.
    - if it's apex test class, each test method should have assertion statement.
-2. check and correct typos, optimize variable naming and code logic.
-3. Maintain the original format and indentation of the code.
-4. Return optimized code, and wrap it with '-$$-'. For example:  
+2. Maintain the original format and indentation of the code.
+3. Return optimized code, and wrap it with '-$$-'. For example:  
 Input: String a;
 Return: -$$-String a;-$$-`
                 },
