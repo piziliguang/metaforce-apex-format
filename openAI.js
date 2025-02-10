@@ -51,7 +51,7 @@ const AI_ACTION = {
    - if it's apex code, optimize it by java coding conventions.
    - if it's javascript code, optimize it by javascript coding conventions.
    - if it's apex test class, each test method should have assertion statement.
-2. Maintain the original format and indentation of the code.
+2. Maintain the original code comments, code format, indentation of the code.
 3. Return optimized code, and wrap it with '-$$-'. For example:  
 Input: String a;
 Return: -$$-String a;-$$-`
