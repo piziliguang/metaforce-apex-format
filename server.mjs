@@ -30,7 +30,7 @@ app.post('/ai/tongyi', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/doubao', jsonParser, async (req, res) => {
-    let { method, code } = req.body || {};
+    let { model, method, code } = req.body || {};
     let result = await requestAI(AI_PROVIDER.DouBao, model, method, code);
     res.json(result);
 });

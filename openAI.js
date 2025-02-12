@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 const TONGYI_API_KEY = 'sk-f2265729ffb1488c97e920de3760466c';
 const TONGYI_API_ENDPOINT = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
-const TONGYI_API_MODEL_DEFAULT = 'qwen-plus-latest';
+const TONGYI_API_MODEL_DEFAULT = 'qwen-plus-latest'; // deepseek-v3
 
 const DOUBAO_API_KEY = '459008a9-4dcb-41e7-89d8-4cf4d85d55c6';
 const DOUBAO_API_ENDPOINT = 'https://ark.cn-beijing.volces.com/api/v3';
