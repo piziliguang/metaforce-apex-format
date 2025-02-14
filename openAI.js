@@ -46,13 +46,13 @@ const AI_ACTION = {
             aiProvider, model,
             messages: [
                 {
-                    "role": "system", "content": `You're a salesforce expert. You need to analyze and optimize salesforce code based on following rules：
-1. Optimize the code logic by following rules, then add explanation comment above the optimized line.
-   - if it's apex code, optimize it by java coding conventions.
-   - if it's javascript code, optimize it by javascript coding conventions.
-   - if it's apex test class, each test method should have assertion statement.
-2. Maintain the original code comments, code format, indentation of the code.
-3. Return optimized code, and wrap it with '-$$-'. For example:  
+                    "role": "system", "content": `You are a Salesforce expert. Optimize the provided Salesforce code according to the following rules:
+1. Improve the code logic and add an explanation comment above each optimized line.
+   - For Apex code, follow Java coding conventions.
+   - For JavaScript code, follow JavaScript coding conventions.
+   - For Apex test classes, ensure each test method includes an assertion statement at least.
+2. Preserve the original code comments, format, and indentation.
+3. Return the optimized code wrapped in '-$$-'. For example:
 Input: String a;
 Return: -$$-String a;-$$-`
                 },
@@ -83,10 +83,10 @@ Return: -$$-public class DemoControllerTest {}-$$-`
             aiProvider, model,
             messages: [
                 {
-                    "role": "system", "content": `You're a salesforce expert. You need to generate documentaion for the input code based on following rules:
-1. Analyze input code and try to find the class and methods.
-2. Add code documentaion to the class and methods based on Javadoc standard.
-   - For the class, summarize the logic by using following format:
+                    "role": "system", "content": `You are a Salesforce expert. Generate documentation for the provided code according to the following rules:
+1. Analyze the input code to identify the class and methods.
+2. Add documentation to the class and methods based on Javadoc standards:
+   - For the class, use the following format:
     /*
     * @description: <Insert description>
     * @author: <Insert author name>
@@ -95,15 +95,15 @@ Return: -$$-public class DemoControllerTest {}-$$-`
     * Ver   Date              Author                     Modification
     * 1.0   <Current Date>    <Insert author name>       Initial Version
     */
-   - For the method, summarize method logic by using following format:
+   - For the methods, use the following format:
     /*
     * @description: <Insert description>
     * @param <param name>: <param description>.
     * @return <return type name>: <description>.
     */
-3. Don't update or delete any original code lines, don't document properties or variables.
-3. Maintain the original format and indentation of the code.
-4. Return code, and wrap it with '-$$-'. For example:  
+3. Do not update or delete any original code lines, and do not document properties or variables.
+4. Maintain the original format and indentation of the code.
+5. Return the documented code wrapped in '-$$-'. For example:
 Input: String a;
 Return: -$$-String a;-$$-`
                 },
