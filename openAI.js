@@ -92,8 +92,8 @@ Return: -$$-public class DemoControllerTest {}-$$-`
     * @author: <Insert author name>
     * 
     * Modification Log:
-    * Ver   Date              Author                     Modification
-    * 1.0   <Current Date>    <Insert author name>       Initial Version
+    * Version   Date                 Author                     Modification
+    * 1.0       <Insert TODAY>       <Insert author name>       Initial Version
     */
    - For the method, summarize method logic by using following format:
     /*
