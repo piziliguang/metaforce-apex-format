@@ -23,6 +23,12 @@ app.post('/apex/format', jsonParser, async (req, res) => {
     res.json(result);
 });
 
+app.post('/ai/chat', jsonParser, async (req, res) => {
+    let { model, method, code } = req.body || {};
+    let result = await requestAI(AI_PROVIDER.DeepSeek, model, method, code);
+    res.json(result);
+});
+
 app.post('/ai/tongyi', jsonParser, async (req, res) => {
     let { model, method, code } = req.body || {};
     let result = await requestAI(AI_PROVIDER.TongYi, model, method, code);

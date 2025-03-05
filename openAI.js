@@ -1,4 +1,8 @@
 import OpenAI from 'openai';
+const DEEPSEEK_API_KEY = 'sk-ca24d80d455c4bb285de9a7a33ed02f8';
+const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/v1';
+const DEEPSEEK_API_MODEL_DEFAULT = 'deepseek-chat'; // deepseek-v3
+
 const TONGYI_API_KEY = 'sk-f2265729ffb1488c97e920de3760466c';
 const TONGYI_API_ENDPOINT = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 const TONGYI_API_MODEL_DEFAULT = 'qwen-plus-latest'; // deepseek-v3
@@ -10,11 +14,16 @@ const DOUBAO_API_MODEL_DEFAULT = 'ep-20250207172645-qxcjc';
 const AI_PROVIDER = {
     TongYi: 'TongYi',
     DouBao: 'DouBao',
+    DeepSeek: 'DeepSeek',
 }
 
 async function requestAIService ({ aiProvider, model, messages, isPartial }) {
     let aiClient = null, aiModel = null;
-    if (aiProvider == AI_PROVIDER.TongYi) {
+    if (aiProvider == AI_PROVIDER.DeepSeek) {
+        aiClient = new OpenAI({ apiKey: DEEPSEEK_API_KEY, baseURL: DEEPSEEK_API_ENDPOINT });
+        aiModel = model || DEEPSEEK_API_MODEL_DEFAULT;
+    }
+    else if (aiProvider == AI_PROVIDER.TongYi) {
         aiClient = new OpenAI({ apiKey: TONGYI_API_KEY, baseURL: TONGYI_API_ENDPOINT });
         aiModel = model || TONGYI_API_MODEL_DEFAULT;
     }
@@ -25,7 +34,7 @@ async function requestAIService ({ aiProvider, model, messages, isPartial }) {
 
     console.log(`AI Provider: ${aiProvider}, Model: ${aiModel}`);
     let completion = await aiClient.chat.completions.create({
-        messages, model: aiModel, temperature: 0.2
+        messages, model: aiModel, temperature: 0
     });
 
     if (isPartial) {
@@ -68,7 +77,7 @@ Return: -$$-String a;-$$-`
                 {
                     "role": "system", "content": `You're a salesforce expert. You need to generate an Apex test class for the input Apex code based on following rules:
 1. Analyze apex code and generate apex test class.
-2. Add code documentaion to the apex test class based on Javadoc standard.
+2. Add code documentation to the apex test class based on Javadoc standard.
 3. Return apex test class, and wrap it with '-$$-'。For example:  
 Input: public class DemoController {}
 Return: -$$-public class DemoControllerTest {}-$$-`
@@ -79,33 +88,51 @@ Return: -$$-public class DemoControllerTest {}-$$-`
     },
 
     async documentCode (aiProvider, model, code) {
+        let currDate = new Date().toISOString().split('T')[0];
         return await requestAIService({
             aiProvider, model,
             messages: [
                 {
-                    "role": "system", "content": `You're a salesforce expert. You need to generate documentaion for the input code based on following rules:
-1. Analyze input code and try to find the class and methods.
-2. Add code documentaion to the class and methods based on Javadoc standard.
-   - For the class, summarize the logic by using following format:
-    /*
-    * @description: <Insert description>
-    * @author: <Insert author name>
-    * 
-    * Modification Log:
-    * Version   Date                 Author                     Modification
-    * 1.0       <Insert TODAY>       <Insert author name>       Initial Version
-    */
-   - For the method, summarize method logic by using following format:
-    /*
-    * @description: <Insert description>
-    * @param <param name>: <param description>.
-    * @return <return type name>: <description>.
-    */
-3. Don't update or delete any original code lines, don't document properties or variables.
-3. Maintain the original format and indentation of the code.
-4. Return code, and wrap it with '-$$-'. For example:  
-Input: String a;
-Return: -$$-String a;-$$-`
+                    "role": "system", "content":
+                        `You're a Salesforce expert tasked with generating code documentation. Follow these steps meticulously:
+1. Code Analysis
+- Identify ONLY class/method declarations in the input code
+- Ignore variables, properties, and non-declarative code
+2. Documentation Rules
+For Classes:
+- Place directly before class declaration
+- Keep version/date/author placeholders
+Example:
+/*
+ * @description: <Concise class purpose summary>
+ * @author: <Insert author name>
+ *
+ * Modification Log:
+ * Version   Date             Author                     Modification
+ * 1.0       ${currDate}       <Insert author name>       Initial Version
+ */
+
+For Methods,
+- Include one @param per parameter: * @param [name]: [purpose]
+- Include @return for non-void methods: * @return [type]: [description]
+Example:
+/*
+ * @description: <Verbose method functionality>
+ * <@param lines only if parameters exist>
+ * <@return line only for non-void methods>
+ */
+
+3. Format Preservation
+- Maintain original indentation
+- Never modify existing code/comments
+- Insert documentation blocks WITHOUT altering surrounding code
+
+4. Output Formatting
+- Return final code wrapped between -$$- markers
+- Keep original code structure intact
+
+Prioritize accuracy in parameter/return type detection. Use Apex syntax awareness for proper context analysis.
+`
                 },
                 { "role": "user", "content": code }
             ]
