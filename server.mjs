@@ -30,24 +30,24 @@ app.post('/apex/format', jsonParser, async (req, res) => {
 });
 
 app.post('/flow/analyze', jsonParser, async (req, res) => {
-    let { metadata } = req.body || {};
-    let uuidTemporaryName = randomUUID();
-
-    let flowFullPath = path.resolve(`cache/${uuidTemporaryName}.flow-meta.xml`);
-    await outputFile(flowFullPath, metadata);
-
-    let cmdResult = {}, cmdLine = `sfdx flow:scan -p "${flowFullPath}" --json`;
     try {
-        cmdResult = execSync(cmdLine)?.toString();
-    } catch (error) {
-        cmdResult = error.stdout?.toString();
-    }
-    remove(flowFullPath);
+        let { metadata } = req.body || {};
+        let uuidTemporaryName = randomUUID();
 
-    try {
+        let flowFullPath = path.resolve(`cache/${uuidTemporaryName}.flow-meta.xml`);
+        await outputFile(flowFullPath, metadata);
+
+        let cmdResult = {}, cmdLine = `sfdx flow:scan -p "${flowFullPath}" --json`;
+        try {
+            cmdResult = execSync(cmdLine)?.toString();
+        } catch (error) {
+            cmdResult = error.stdout?.toString();
+        }
+        remove(flowFullPath);
+
         res.json(JSON.parse(cmdResult));
     } catch (ex) {
-        res.json({ error: 'unknown error.' })
+        res.json({ error: 'unknown error.', source: ex })
     }
 });
 
