@@ -5,8 +5,9 @@ import prettier from "prettier";
 import * as apexPrettierPlugin from "prettier-plugin-apex";
 
 import path from 'node:path';
+import { randomUUID } from 'crypto'
 import { execSync } from "child_process"
-import { outputFile } from 'fs-extra/esm'
+import { outputFile, remove } from 'fs-extra/esm'
 
 import { AI_PROVIDER, AI_ACTION } from './openAI.js';
 
@@ -30,8 +31,9 @@ app.post('/apex/format', jsonParser, async (req, res) => {
 
 app.post('/flow/analyze', jsonParser, async (req, res) => {
     let { metadata } = req.body || {};
+    let uuidTemporaryName = randomUUID();
 
-    let flowFullPath = path.resolve('template.flow-meta.xml');
+    let flowFullPath = path.resolve(`cache/${uuidTemporaryName}.flow-meta.xml`);
     await outputFile(flowFullPath, metadata);
 
     let cmdResult = {}, cmdLine = `sfdx flow:scan -p "${flowFullPath}" --json`;
@@ -40,6 +42,7 @@ app.post('/flow/analyze', jsonParser, async (req, res) => {
     } catch (error) {
         cmdResult = error.stdout?.toString();
     }
+    remove(flowFullPath);
 
     try {
         res.json(JSON.parse(cmdResult));
