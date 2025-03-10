@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>RefreshReceiptPurchases</name>
+        <label>Refresh Receipt Purchases</label>
+        <locationX>50</locationX>
+        <locationY>455</locationY>
+        <actionName>FlowInvoke_RefreshReceiptPurchases</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>installationIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>FlowInvoke_RefreshReceiptPurchases</nameSegment>
+        <versionSegment>1</versionSegment>
+    </actionCalls>
+    <apiVersion>55.0</apiVersion>
+    <decisions>
+        <name>Need_Sync_Purchases_0</name>
+        <label>Need Sync Purchases</label>
+        <locationX>182</locationX>
+        <locationY>335</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Test_Purchases_Yes_0</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>TestPurchaseSyncNeeded</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>ProdPurchaseSyncNeeded</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>RefreshReceiptPurchases</targetReference>
+            </connector>
+            <label>Test Purchases Yes</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <formulas>
+        <name>ProdPurchaseSyncNeeded</name>
+        <dataType>Boolean</dataType>
+        <expression>{!$Record.easymeta__HasReceiptProd__c} &amp;&amp; OR({!ISNULL($Record.easymeta__PurchaseSyncDateProd__c)}, DATEVALUE({!$Record.easymeta__PurchaseSyncDateProd__c}) != TODAY())</expression>
+    </formulas>
+    <formulas>
+        <name>TestPurchaseSyncNeeded</name>
+        <dataType>Boolean</dataType>
+        <expression>{!$Record.easymeta__HasReceiptTest__c} &amp;&amp; OR({!ISNULL($Record.easymeta__PurchaseSyncDateTest__c)}, DATEVALUE({!$Record.easymeta__PurchaseSyncDateTest__c}) != TODAY())</expression>
+    </formulas>
+    <interviewLabel>App Installation: After Update {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>App Installation: After Update</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Need_Sync_Purchases_0</targetReference>
+        </connector>
+        <object>AppInstallation__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

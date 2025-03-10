@@ -1,7 +1,12 @@
 import express from "express";
-import bodyParser from "body-parser"
+import bodyParser from "body-parser";
+
 import prettier from "prettier";
 import * as apexPrettierPlugin from "prettier-plugin-apex";
+
+import path from 'node:path';
+import { execSync } from "child_process"
+import { outputFile } from 'fs-extra/esm'
 
 import { AI_PROVIDER, AI_ACTION } from './openAI.js';
 
@@ -21,6 +26,22 @@ app.post('/apex/format', jsonParser, async (req, res) => {
     }
     //res.setHeader('Content-Type', 'application/json');
     res.json(result);
+});
+
+app.post('/flow/analyze', jsonParser, async (req, res) => {
+    let { metadata } = req.body || {};
+
+    let flowFullPath = path.resolve('template.flow-meta.xml');
+    await outputFile(flowFullPath, metadata);
+
+    let cmdResult = {}, cmdLine = `sfdx flow:scan -p "${flowFullPath}" --json`;
+    try {
+        cmdResult = execSync(cmdLine)?.toString();
+        res.json(JSON.parse(cmdResult));
+    } catch (error) {
+        cmdResult = error.stdout;
+        res.json(cmdResult);
+    }
 });
 
 app.post('/ai/chat', jsonParser, async (req, res) => {
