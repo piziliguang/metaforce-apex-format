@@ -37,10 +37,14 @@ app.post('/flow/analyze', jsonParser, async (req, res) => {
     let cmdResult = {}, cmdLine = `sfdx flow:scan -p "${flowFullPath}" --json`;
     try {
         cmdResult = execSync(cmdLine)?.toString();
-        res.json(JSON.parse(cmdResult));
     } catch (error) {
-        cmdResult = error.stdout;
-        res.json(cmdResult);
+        cmdResult = error.stdout?.toString();
+    }
+
+    try {
+        res.json(JSON.parse(cmdResult));
+    } catch (ex) {
+        res.json({ error: 'unknown error.' })
     }
 });
 
