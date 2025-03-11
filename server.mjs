@@ -13,7 +13,7 @@ import { AI_PROVIDER, AI_ACTION } from './openAI.js';
 
 const port = 3000;
 const app = express();
-const jsonParser = bodyParser.json();
+const jsonParser = bodyParser.json({ limit: '10mb' });
 
 app.post('/apex/format', jsonParser, async (req, res) => {
     let { apexCode, prettierOptions } = req.body || {}, result = {};
