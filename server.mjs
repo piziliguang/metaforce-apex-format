@@ -1,77 +1,30 @@
 import express from "express";
 import bodyParser from "body-parser";
 
-import prettier from "prettier";
-import * as apexPrettierPlugin from "prettier-plugin-apex";
-
-import path from 'node:path';
-import { randomUUID } from 'crypto'
-import { execSync } from "child_process"
-import { outputFile, remove } from 'fs-extra/esm'
-
-import { AI_PROVIDER, AI_ACTION } from './openAI.js';
+import { AI_PROVIDER, AI_ACTION } from './utils/openAI.js';
+import { analyzeFlow } from './utils/analyzeFlow.js';
+import { formatApex } from './utils/formatApex.js';
 
 const port = 3000;
 const app = express();
 const jsonParser = bodyParser.json({ limit: '10mb' });
 
 app.post('/apex/format', jsonParser, async (req, res) => {
-    let { apexCode, prettierOptions } = req.body || {}, result = {};
-    if (!prettierOptions) prettierOptions = {};
-
-    try {
-        let formatted = await prettier.format(apexCode || '', { semi: true, tabWidth: 4, printWidth: 120, ...prettierOptions, parser: prettierOptions?.anonymous ? 'apex-anonymous' : 'apex', plugins: [apexPrettierPlugin] })
-        result = { isSucceeded: true, formatted };
-    } catch (ex) {
-        result = { isSucceeded: false, formatted: ex.message };
-    }
-    //res.setHeader('Content-Type', 'application/json');
-    res.json(result);
+    res.json(await formatApex(req.body));
 });
 
 app.post('/flow/analyze', jsonParser, async (req, res) => {
-    try {
-        let { metadata } = req.body || {};
-        let uuidTemporaryName = randomUUID();
-
-        let flowFullPath = path.resolve(`cache/${uuidTemporaryName}.flow-meta.xml`);
-        await outputFile(flowFullPath, metadata);
-
-        let cmdResult = {}, cmdLine = `sfdx flow:scan -p "${flowFullPath}" --json`;
-        try {
-            cmdResult = execSync(cmdLine)?.toString();
-        } catch (error) {
-            cmdResult = error.stdout?.toString();
-        }
-        remove(flowFullPath);
-
-        res.json(JSON.parse(cmdResult));
-    } catch (ex) {
-        res.json({ error: 'unknown error.', source: ex })
-    }
+    res.json(await analyzeFlow(req.body))
 });
 
 app.post('/ai/chat', jsonParser, async (req, res) => {
-    let { model, method, code } = req.body || {};
-    let result = await requestAI(AI_PROVIDER.DeepSeek, model, method, code);
-    res.json(result);
+    res.json(await requestAI(AI_PROVIDER.DeepSeek, req.body));
 });
 
-app.post('/ai/tongyi', jsonParser, async (req, res) => {
-    let { model, method, code } = req.body || {};
-    let result = await requestAI(AI_PROVIDER.TongYi, model, method, code);
-    res.json(result);
-});
-
-app.post('/ai/doubao', jsonParser, async (req, res) => {
-    let { model, method, code } = req.body || {};
-    let result = await requestAI(AI_PROVIDER.DouBao, model, method, code);
-    res.json(result);
-});
-
-async function requestAI (aiProvider, model, method, code) {
-    let result = { isSucceeded: true, code: '' };
+async function requestAI (aiProvider, requestBody = {}) {
+    let { model, method, code } = requestBody;
     try {
+        let result = { isSucceeded: true, code: '' }
         if (method == 'optimizeApex' || method == 'optimizeCode') {
             result.code = await AI_ACTION.optimizeCode(aiProvider, model, code);
         } else if (method == 'documentCode') {
@@ -82,10 +35,10 @@ async function requestAI (aiProvider, model, method, code) {
             result.isSucceeded = false;
             result.code = 'AI service is not available yet, stay tuned.';
         }
+        return result;
     } catch (ex) {
-        result = { isSucceeded: false, code: ex?.error?.message || ex?.message };
+        return { isSucceeded: false, code: ex?.error?.message || ex?.message };
     }
-    return result;
 }
 
 app.listen(port, () => {
