@@ -14,6 +14,7 @@ export const analyzeCode = async (requestBody = {}) => {
         let inputFileFullPath = path.resolve(inputFilePath), outputFileFullPath = path.resolve(outputFilePath);
         await outputFile(inputFileFullPath, codeMetadata || '');
 
+        let error;
         let cmdLine = `sf code-analyzer run ` +
             `-w ${inputFilePath} ` +
             `--config-file ${configPath} ` +
@@ -22,8 +23,8 @@ export const analyzeCode = async (requestBody = {}) => {
             `--severity-threshold 3`;
 
         try { execSync(cmdLine); }
-        catch (error) {
-            //DO-NOTHING
+        catch (ex) {
+            error = ex;
         }
         finally {
             remove(inputFileFullPath);
@@ -34,7 +35,7 @@ export const analyzeCode = async (requestBody = {}) => {
             remove(outputFileFullPath);
             return { isSucceeded: true, data };
         } else {
-            return { isSucceeded: false, data: 'Unknown error.' + pathExistsSync(outputFileFullPath) };
+            return { isSucceeded: false, data: 'Unknown error.' + error };
         }
     } catch (ex) {
         console.log('err');
