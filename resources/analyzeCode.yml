@@ -1,0 +1,9 @@
+engines:
+    flowtest:
+        disable_engine: true
+    eslint:
+        disable_engine: true
+    retire-js:
+        disable_engine: true
+    cpd:
+        disable_engine: true

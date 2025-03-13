@@ -5,6 +5,10 @@ import { outputFile, remove } from 'fs-extra/esm'
 export const analyzeFlow = async (requestBody = {}) => {
     try {
         let { flowName, flowMetadata } = requestBody;
+        if (!flowName || !flowMetadata) {
+            return { isSucceeded: false, data: 'Required data is missing!' };
+        }
+
         let flowFullPath = path.resolve(`cache/${flowName}.flow-meta.xml`);
         await outputFile(flowFullPath, flowMetadata);
 
@@ -33,6 +37,6 @@ export const analyzeFlow = async (requestBody = {}) => {
         })
         return { isSucceeded: true, data: Array.from(rule2Result.values()) };
     } catch (ex) {
-        return { isSucceeded: false, source: ex };
+        return { isSucceeded: false, data: ex };
     }
 }

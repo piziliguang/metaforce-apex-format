@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 
 import { AI_PROVIDER, AI_ACTION } from './utils/openAI.js';
 import { analyzeFlow } from './utils/analyzeFlow.js';
+import { analyzeCode } from './utils/analyzeCode.js';
 import { formatApex } from './utils/formatApex.js';
 
 const port = 3000;
@@ -11,6 +12,10 @@ const jsonParser = bodyParser.json({ limit: '10mb' });
 
 app.post('/apex/format', jsonParser, async (req, res) => {
     res.json(await formatApex(req.body));
+});
+
+app.post('/code/analyze', jsonParser, async (req, res) => {
+    res.json(await analyzeCode(req.body))
 });
 
 app.post('/flow/analyze', jsonParser, async (req, res) => {
