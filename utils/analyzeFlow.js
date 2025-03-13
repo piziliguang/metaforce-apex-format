@@ -20,7 +20,8 @@ export const analyzeFlow = async (requestBody = {}) => {
 
         const rule2Result = new Map();
         analyzeResult.result.results.forEach(rec => {
-            let nodeObj = { nodeName: rec.name, nodeType: rec.type };
+            let connectsTo = rec.details?.connectsTo ? rec.details?.connectsTo.join(', ') : null;
+            let nodeObj = { nodeName: rec.name, nodeType: rec.type, connectsTo: connectsTo };
             if (!rule2Result.has(rec.rule)) {
                 rule2Result.set(rec.rule, {
                     ruleName: rec.rule, ruleDescription: rec.ruleDescription, severity: rec.severity,
