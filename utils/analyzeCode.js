@@ -1,6 +1,14 @@
 import path from 'node:path';
 import { execSync } from "child_process"
-import { outputFile, pathExistsSync, readJson, remove } from 'fs-extra/esm'
+import { emptyDir, outputFile, pathExistsSync, readJson, remove } from 'fs-extra/esm'
+import { readFile } from 'fs/promises'
+const Severity_Map = {
+    '1': 'Critical',
+    '2': 'High',
+    '3': 'Moderate',
+    '4': 'Low',
+    '5': 'Info',
+}
 
 export const analyzeCode = async (requestBody = {}) => {
     try {
@@ -9,36 +17,53 @@ export const analyzeCode = async (requestBody = {}) => {
             return { isSucceeded: false, data: 'Required data is missing!' };
         }
 
-        let configPath = 'resources/analyzeCode.yml', inputFilePath = `cache/${codeName}`, outputFilePath = `cache/${codeName}-output.json`;
+        let configPath = 'resources/code-analyzer.yml',
+            inputFilePath = `cache/${codeName}`,
+            outputFilePath = `cache/${codeName}-output.json`;
 
-        let inputFileFullPath = path.resolve(inputFilePath), outputFileFullPath = path.resolve(outputFilePath);
-        await outputFile(inputFileFullPath, codeMetadata || '');
-
-        let error;
-        let cmdLine = `sf code-analyzer run ` +
-            `-w ${inputFilePath} ` +
-            `--config-file ${configPath} ` +
-            `--output-file ${outputFilePath} ` +
-            `--rule-selector pmd:recommended ` +
-            `--severity-threshold 3`;
-
-        try { execSync(cmdLine); }
+        let errorLogString = null, logFileFullPath = null;
+        try {
+            await outputFile(path.resolve(inputFilePath), codeMetadata || '');
+            let result = execSync(`sf code-analyzer run ` +
+                `--config-file ${configPath} ` +
+                `-w ${inputFilePath} ` +
+                `--output-file ${outputFilePath} ` +
+                `--rule-selector pmd:all eslint:all ` +
+                `--severity-threshold 3`,
+                { encoding: 'utf-8' }
+            );
+            logFileFullPath = result.split('\n').find(val => val.includes('metaforce-apex-format/logs/'))?.trim();
+        }
         catch (ex) {
-            error = ex;
-        }
-        finally {
-            remove(inputFileFullPath);
+            errorLogString = ex.stdout?.toString();
         }
 
+        let response = null, outputFileFullPath = path.resolve(outputFilePath)
         if (pathExistsSync(outputFileFullPath)) {
-            let data = await readJson(outputFileFullPath, { throws: false });
-            remove(outputFileFullPath);
-            return { isSucceeded: true, data };
+            let { violations } = await readJson(outputFileFullPath, { throws: false }) || {};
+            if (!violations) violations = [];
+
+            if (violations.length == 0) {
+                let logs = (await readFile(logFileFullPath, 'utf-8'))?.split('\n');
+                errorLogString = logs.find(log => {
+                    return log.trim().includes(' error at ');
+                })?.trim();
+            } else {
+                errorLogString = null;
+                violations.forEach(rec => {
+                    rec.severity = Severity_Map[rec.severity];
+                });
+            }
+            response = errorLogString ? { isSucceeded: false, data: errorLogString } : { isSucceeded: true, data: violations };
         } else {
-            return { isSucceeded: false, data: 'Unknown error.' + error };
+            response = { isSucceeded: false, data: 'Unknown error.' + errorLogString };
         }
+
+        emptyDir(path.resolve('cache'));
+        emptyDir(path.resolve('logs'));
+        return response;
     } catch (ex) {
-        console.log('err');
+        console.log(ex);
         return { isSucceeded: false, data: ex };
     }
 }

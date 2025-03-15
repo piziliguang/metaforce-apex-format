@@ -1,8 +1,14 @@
+log_folder: logs
+
 engines:
     flowtest:
         disable_engine: true
     eslint:
-        disable_engine: true
+        disable_engine: false
+    pmd:
+        disable_engine: false
+        custom_rulesets:
+            - pmd-HtmlRuleSet.xml
     retire-js:
         disable_engine: true
     cpd:
