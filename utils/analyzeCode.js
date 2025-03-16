@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { execSync } from "child_process"
-import { emptyDir, outputFile, pathExistsSync, readJson, remove } from 'fs-extra/esm'
+import { emptyDir, outputFile, pathExistsSync, readJson } from 'fs-extra/esm'
 import { readFile } from 'fs/promises'
 const Severity_Map = {
     '1': 'Critical',
@@ -50,8 +50,13 @@ export const analyzeCode = async (requestBody = {}) => {
                 })?.trim();
             } else {
                 errorLogString = null;
-                violations.forEach(rec => {
-                    rec.severity = Severity_Map[rec.severity];
+                violations = violations.map(rec => {
+                    return {
+                        severity: Severity_Map[rec.severity],
+                        message: rec.message,
+                        rule: rec.rule,
+                        ...(rec.locations[0] || {})
+                    }
                 });
             }
             response = errorLogString ? { isSucceeded: false, data: errorLogString } : { isSucceeded: true, data: violations };
