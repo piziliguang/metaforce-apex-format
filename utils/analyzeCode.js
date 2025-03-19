@@ -50,7 +50,7 @@ export const analyzeCode = async (requestBody = {}) => {
                 })?.trim();
             } else {
                 errorLogString = null;
-                violations = violations.map(rec => {
+                violations = violations.filter(rec => rec.severity < 4).map(rec => {
                     return {
                         severity: Severity_Map[rec.severity],
                         message: rec.message,
