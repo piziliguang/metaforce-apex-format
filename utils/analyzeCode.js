@@ -51,17 +51,21 @@ export const analyzeCode = async (requestBody = {}) => {
             } else {
                 errorLogString = null;
                 violations = violations.filter(rec => rec.severity < 4).map(rec => {
+                    let loc = rec.locations?.length > 0 ? rec.locations[0] : {};
                     return {
                         severity: Severity_Map[rec.severity],
                         message: rec.message,
                         rule: rec.rule,
-                        ...(rec.locations[0] || {})
+                        startLine: loc.startLine,
+                        startColumn: loc.startColumn,
+                        endLine: loc.endLine,
+                        endColumn: loc.endColumn
                     }
                 });
             }
-            response = errorLogString ? { isSucceeded: false, data: errorLogString } : { isSucceeded: true, data: violations };
+            response = errorLogString ? { isSucceeded: false, name: codeName, data: errorLogString } : { isSucceeded: true, name: codeName, data: violations };
         } else {
-            response = { isSucceeded: false, data: 'Unknown error.' + errorLogString };
+            response = { isSucceeded: false, name: codeName, data: 'Unknown error.' + errorLogString };
         }
 
         emptyDir(path.resolve('cache'));
