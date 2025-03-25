@@ -148,7 +148,7 @@ private class DemoControllerTest {
         });
     },
 
-    async documentCode (aiProvider, model, code, developerName) {
+    async documentCode (aiProvider, model, developerName, code) {
         let currDate = new Date().toISOString().split('T')[0];
         return await requestAIService({
             aiProvider, model,
@@ -160,16 +160,17 @@ private class DemoControllerTest {
 - Ignore variables, properties, and non-declarative code
 2. Documentation Rules
 For Classes:
-- Place directly before class declaration
-- Keep version/date/author placeholders and keep vertically aligned
+- Place directly before apex class declaration, including apex test class.
+- Put version/date/author in the modification log. The initial version is "1.0", the author is "${developerName}", and the log date is "${currDate}".
+- Keep logs vertically aligned
 Example:
 /*
  * @description: <Concise class purpose summary>
- * @author: ${developerName || '<Insert author name>'}
+ * @author: ${developerName}
  *
  * Modification Log:
- * Version   Date             Author                                        Modification
- * 1.0       ${currDate}      ${developerName || '<Insert author name>'}    Initial Version
+ * Version         Date          Author           Modification
+ * <Log Version>   <Log Date>    <Author Name>    Initial Version
  */
 
 For Methods,
