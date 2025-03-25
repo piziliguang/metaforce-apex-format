@@ -148,7 +148,7 @@ private class DemoControllerTest {
         });
     },
 
-    async documentCode (aiProvider, model, code) {
+    async documentCode (aiProvider, model, code, developerName) {
         let currDate = new Date().toISOString().split('T')[0];
         return await requestAIService({
             aiProvider, model,
@@ -161,15 +161,15 @@ private class DemoControllerTest {
 2. Documentation Rules
 For Classes:
 - Place directly before class declaration
-- Keep version/date/author placeholders
+- Keep version/date/author placeholders and keep vertically aligned
 Example:
 /*
  * @description: <Concise class purpose summary>
- * @author: <Insert author name>
+ * @author: ${developerName || '<Insert author name>'}
  *
  * Modification Log:
- * Version   Date             Author                     Modification
- * 1.0       ${currDate}       <Insert author name>       Initial Version
+ * Version   Date             Author                                        Modification
+ * 1.0       ${currDate}      ${developerName || '<Insert author name>'}    Initial Version
  */
 
 For Methods,

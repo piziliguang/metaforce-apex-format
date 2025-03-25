@@ -27,13 +27,13 @@ app.post('/ai/chat', jsonParser, async (req, res) => {
 });
 
 async function requestAI (aiProvider, requestBody = {}) {
-    let { model, method, code } = requestBody;
+    let { model, method, code, developerName } = requestBody;
     try {
         let result = { isSucceeded: true, code: '' }
         if (method == 'optimizeApex' || method == 'optimizeCode') {
             result.code = await AI_ACTION.optimizeCode(aiProvider, model, code);
         } else if (method == 'documentCode') {
-            result.code = await AI_ACTION.documentCode(aiProvider, model, code);
+            result.code = await AI_ACTION.documentCode(aiProvider, model, code, developerName);
         } else if (method == 'generateApexTest') {
             result.code = await AI_ACTION.generateApexTest(aiProvider, model, code);
         } else {
