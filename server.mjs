@@ -23,28 +23,25 @@ app.post('/flow/analyze', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/chat', jsonParser, async (req, res) => {
-    res.json(await requestAI(AI_PROVIDER.DeepSeek, req.body));
-});
-
-async function requestAI (aiProvider, requestBody = {}) {
-    let { model, method, developerName, code } = requestBody;
+    let { model, method, developerName, code } = req.body, result = {};
     try {
-        let result = { isSucceeded: true, code: '' }
-        if (method == 'optimizeApex' || method == 'optimizeCode') {
-            result.code = await AI_ACTION.optimizeCode(aiProvider, model, code);
+        result = { isSucceeded: true, code: '' }
+        if (method == 'optimizeCode' || method == 'optimizeApex') {
+            result.code = await AI_ACTION.optimizeCode(AI_PROVIDER.DeepSeek, model, code);
         } else if (method == 'documentCode') {
-            result.code = await AI_ACTION.documentCode(aiProvider, model, developerName, code);
+            result.code = await AI_ACTION.documentCode(AI_PROVIDER.DeepSeek, model, developerName, code);
         } else if (method == 'generateApexTest') {
-            result.code = await AI_ACTION.generateApexTest(aiProvider, model, code);
+            result.code = await AI_ACTION.generateApexTest(AI_PROVIDER.DeepSeek, model, code);
         } else {
             result.isSucceeded = false;
             result.code = 'AI service is not available yet, stay tuned.';
         }
-        return result;
     } catch (ex) {
-        return { isSucceeded: false, code: ex?.error?.message || ex?.message };
+        result = { isSucceeded: false, code: ex?.error?.message || ex?.message };
     }
-}
+
+    res.json(result);
+});
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

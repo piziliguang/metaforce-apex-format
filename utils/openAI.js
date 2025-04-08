@@ -11,48 +11,13 @@ const DOUBAO_API_KEY = '459008a9-4dcb-41e7-89d8-4cf4d85d55c6';
 const DOUBAO_API_ENDPOINT = 'https://ark.cn-beijing.volces.com/api/v3';
 const DOUBAO_API_MODEL_DEFAULT = 'ep-20250207172645-qxcjc';
 
-const AI_PROVIDER = {
-    TongYi: 'TongYi',
-    DouBao: 'DouBao',
-    DeepSeek: 'DeepSeek',
-}
-
-async function requestAIService ({ aiProvider, model, messages, isPartial }) {
-    let aiClient = null, aiModel = null;
-    if (aiProvider == AI_PROVIDER.DeepSeek) {
-        aiClient = new OpenAI({ apiKey: DEEPSEEK_API_KEY, baseURL: DEEPSEEK_API_ENDPOINT });
-        aiModel = model || DEEPSEEK_API_MODEL_DEFAULT;
-    }
-    else if (aiProvider == AI_PROVIDER.TongYi) {
-        aiClient = new OpenAI({ apiKey: TONGYI_API_KEY, baseURL: TONGYI_API_ENDPOINT });
-        aiModel = model || TONGYI_API_MODEL_DEFAULT;
-    }
-    else if (aiProvider == AI_PROVIDER.DouBao) {
-        aiClient = new OpenAI({ apiKey: DOUBAO_API_KEY, baseURL: DOUBAO_API_ENDPOINT });
-        aiModel = model || DOUBAO_API_MODEL_DEFAULT;
-    }
-
-    console.log(`AI Provider: ${aiProvider}, Model: ${aiModel}`);
-    let completion = await aiClient.chat.completions.create({
-        messages, model: aiModel, temperature: 0
-    });
-
-    if (isPartial) {
-        return completion.choices[0].message.content;
-    } else {
-        let newContent = completion.choices[0].message.content;
-        if (newContent.includes('-$$-')) {
-            return newContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
-        } else {
-            return newContent.split('\n').slice(1, -1).join('\n');
-        }
-    }
-}
+const AI_PROVIDER = { TongYi: 'TongYi', DouBao: 'DouBao', DeepSeek: 'DeepSeek' }
 
 const AI_ACTION = {
     async optimizeCode (aiProvider, model, code) {
+        let temperature = 0.5;
         return await requestAIService({
-            aiProvider, model,
+            aiProvider, model, temperature,
             messages: [
                 {
                     "role": "system", "content": `Act as a seasoned Salesforce architect. Your task is to analyze and optimize the provided Salesforce code while preserving its original structure. Follow these rules meticulously:
@@ -150,8 +115,9 @@ private class DemoControllerTest {
 
     async documentCode (aiProvider, model, developerName, code) {
         let currDate = new Date().toISOString().split('T')[0];
+        let temperature = 0.2;
         return await requestAIService({
-            aiProvider, model,
+            aiProvider, model, temperature,
             messages: [
                 {
                     "role": "system", "content": `You're a Salesforce expert tasked with generating code documentation. Follow these steps meticulously:
@@ -198,6 +164,35 @@ Prioritize accuracy in parameter/return type detection. Use Apex syntax awarenes
                 { "role": "user", "content": code }
             ]
         });
+    }
+}
+
+async function requestAIService ({ aiProvider, model, temperature = 0, messages }) {
+    let aiClient = null, aiModel = null;
+    if (aiProvider == AI_PROVIDER.DeepSeek) {
+        aiClient = new OpenAI({ apiKey: DEEPSEEK_API_KEY, baseURL: DEEPSEEK_API_ENDPOINT });
+        aiModel = model || DEEPSEEK_API_MODEL_DEFAULT;
+    }
+    else if (aiProvider == AI_PROVIDER.TongYi) {
+        aiClient = new OpenAI({ apiKey: TONGYI_API_KEY, baseURL: TONGYI_API_ENDPOINT });
+        aiModel = model || TONGYI_API_MODEL_DEFAULT;
+    }
+    else if (aiProvider == AI_PROVIDER.DouBao) {
+        aiClient = new OpenAI({ apiKey: DOUBAO_API_KEY, baseURL: DOUBAO_API_ENDPOINT });
+        aiModel = model || DOUBAO_API_MODEL_DEFAULT;
+    }
+
+    console.log(`AI Provider: ${aiProvider}, Model: ${aiModel}`);
+    let completion = await aiClient.chat.completions.create({
+        messages, temperature, model: aiModel
+    });
+
+    let newContent = completion.choices[0].message.content;
+    console.log(newContent)
+    if (newContent.includes('-$$-')) {
+        return newContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
+    } else {
+        return newContent.split('\n').slice(1, -1).join('\n');
     }
 }
 
