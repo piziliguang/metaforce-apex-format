@@ -23,24 +23,30 @@ app.post('/flow/analyze', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/chat', jsonParser, async (req, res) => {
-    let { model, method, developerName, code } = req.body, result = {};
+    let { method, data, code, language = 'apex' } = req.body;
     try {
-        result = { isSucceeded: true, code: '' }
-        if (method == 'optimizeCode' || method == 'optimizeApex') {
-            result.code = await AI_ACTION.optimizeCode(AI_PROVIDER.DeepSeek, model, code);
+        if (code) data = code;
+
+        if (method == 'chatCode') {
+            let streamResponse = await AI_ACTION.chatCode(AI_PROVIDER.DeepSeek, data, language);
+            let responseMessage = "";
+            for await (const part of streamResponse) {
+                responseMessage += part.choices[0]?.delta?.content || '';
+            }
+            let isInValidReponse = responseMessage.includes('you can only ask questions about the salesforce');
+            res.json({ isSucceeded: !isInValidReponse, data: responseMessage });
+        } else if (method == 'optimizeCode') {
+            res.json({ isSucceeded: true, data: await AI_ACTION.optimizeCode(AI_PROVIDER.DeepSeek, data) });
         } else if (method == 'documentCode') {
-            result.code = await AI_ACTION.documentCode(AI_PROVIDER.DeepSeek, model, developerName, code);
+            res.json({ isSucceeded: true, data: await AI_ACTION.documentCode(AI_PROVIDER.DeepSeek, req.body.developerName, data) });
         } else if (method == 'generateApexTest') {
-            result.code = await AI_ACTION.generateApexTest(AI_PROVIDER.DeepSeek, model, code);
+            res.json({ isSucceeded: true, data: await AI_ACTION.generateApexTest(AI_PROVIDER.DeepSeek, data) });
         } else {
-            result.isSucceeded = false;
-            result.code = 'AI service is not available yet, stay tuned.';
+            res.json({ isSucceeded: false, data: 'AI service is not available yet, stay tuned.' });
         }
     } catch (ex) {
-        result = { isSucceeded: false, code: ex?.error?.message || ex?.message };
+        res.json({ isSucceeded: false, data: ex?.error?.message || ex?.message });
     }
-
-    res.json(result);
 });
 
 app.listen(port, () => {

@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 const DEEPSEEK_API_KEY = 'sk-ca24d80d455c4bb285de9a7a33ed02f8';
-const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/v1';
+const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/';
 const DEEPSEEK_API_MODEL_DEFAULT = 'deepseek-chat'; // deepseek-v3
 
 const TONGYI_API_KEY = 'sk-f2265729ffb1488c97e920de3760466c';
@@ -14,10 +14,29 @@ const DOUBAO_API_MODEL_DEFAULT = 'ep-20250207172645-qxcjc';
 const AI_PROVIDER = { TongYi: 'TongYi', DouBao: 'DouBao', DeepSeek: 'DeepSeek' }
 
 const AI_ACTION = {
-    async optimizeCode (aiProvider, model, code) {
-        let temperature = 0.5;
-        return await requestAIService({
-            aiProvider, model, temperature,
+    async chatCode (aiProvider, messages, language) {
+        return await requestAIService(aiProvider, {
+            temperature: 0.5, stream: true,
+            messages: [
+                {
+                    "role": "system", "content": `Your are a salesforce developer. Your task is to generate or complete ${language} code based on the user input. If the input is not related to the salesforce knowledge, output this statement "Sorry, you can only ask questions about the salesforce."
+Output Format:
+1. The output the response in a formatted html format. 
+2. The code in the response must be wrapped by tag "pre".
+3. Don't include any code Explanation after the code response.
+
+For example,
+Input: please write a sort method to sort a string list.
+Output: <div>[Response Description]</div><pre>[Code Response]</pre>`
+                },
+                ...messages
+            ]
+        });
+    },
+
+    async optimizeCode (aiProvider, code) {
+        return await requestAIService(aiProvider, {
+            temperature: 0.5,
             messages: [
                 {
                     "role": "system", "content": `Act as a seasoned Salesforce architect. Your task is to analyze and optimize the provided Salesforce code while preserving its original structure. Follow these rules meticulously:
@@ -58,9 +77,8 @@ const AI_ACTION = {
         });
     },
 
-    async generateApexTest (aiProvider, model, code) {
-        return await requestAIService({
-            aiProvider, model,
+    async generateApexTest (aiProvider, code) {
+        return await requestAIService(aiProvider, {
             messages: [
                 {
                     "role": "system", "content": `Act as a seasoned Salesforce Developer. Your task is to generate a robust Apex test class for the provided Apex code. Follow these requirements strictly:
@@ -113,11 +131,10 @@ private class DemoControllerTest {
         });
     },
 
-    async documentCode (aiProvider, model, developerName, code) {
+    async documentCode (aiProvider, developerName, code) {
         let currDate = new Date().toISOString().split('T')[0];
-        let temperature = 0.2;
-        return await requestAIService({
-            aiProvider, model, temperature,
+        return await requestAIService(aiProvider, {
+            temperature: 0.2,
             messages: [
                 {
                     "role": "system", "content": `You're a Salesforce expert tasked with generating code documentation. Follow these steps meticulously:
@@ -167,31 +184,34 @@ Prioritize accuracy in parameter/return type detection. Use Apex syntax awarenes
     }
 }
 
-async function requestAIService ({ aiProvider, model, temperature = 0, messages }) {
+async function requestAIService (aiProvider, aiParams = {}) {
     let aiClient = null, aiModel = null;
     if (aiProvider == AI_PROVIDER.DeepSeek) {
         aiClient = new OpenAI({ apiKey: DEEPSEEK_API_KEY, baseURL: DEEPSEEK_API_ENDPOINT });
-        aiModel = model || DEEPSEEK_API_MODEL_DEFAULT;
+        aiModel = DEEPSEEK_API_MODEL_DEFAULT;
     }
     else if (aiProvider == AI_PROVIDER.TongYi) {
         aiClient = new OpenAI({ apiKey: TONGYI_API_KEY, baseURL: TONGYI_API_ENDPOINT });
-        aiModel = model || TONGYI_API_MODEL_DEFAULT;
+        aiModel = TONGYI_API_MODEL_DEFAULT;
     }
     else if (aiProvider == AI_PROVIDER.DouBao) {
         aiClient = new OpenAI({ apiKey: DOUBAO_API_KEY, baseURL: DOUBAO_API_ENDPOINT });
-        aiModel = model || DOUBAO_API_MODEL_DEFAULT;
+        aiModel = DOUBAO_API_MODEL_DEFAULT;
     }
 
     console.log(`AI Provider: ${aiProvider}, Model: ${aiModel}`);
     let completion = await aiClient.chat.completions.create({
-        messages, temperature, model: aiModel
+        model: aiModel,
+        ...aiParams
     });
 
-    let newContent = completion.choices[0].message.content;
-    console.log(newContent)
-    if (newContent.includes('-$$-')) {
+    if (aiParams.stream) {
+        return completion;
+    } else if (newContent.includes('-$$-')) {
+        let newContent = completion.choices[0].message.content;
         return newContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
     } else {
+        let newContent = completion.choices[0].message.content;
         return newContent.split('\n').slice(1, -1).join('\n');
     }
 }
