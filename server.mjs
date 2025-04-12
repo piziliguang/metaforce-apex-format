@@ -33,7 +33,7 @@ app.post('/ai/chat', jsonParser, async (req, res) => {
             for await (const part of streamResponse) {
                 responseMessage += part.choices[0]?.delta?.content || '';
             }
-            let isInValidReponse = responseMessage.includes('you can only ask questions about the salesforce');
+            let isInValidReponse = responseMessage.includes('you can only ask questions related to Salesforce');
             res.json({ isSucceeded: !isInValidReponse, data: responseMessage });
         } else if (method == 'optimizeCode') {
             res.json({ isSucceeded: true, data: await AI_ACTION.optimizeCode(AI_PROVIDER.DeepSeek, data) });
