@@ -14,7 +14,7 @@ const DOUBAO_API_MODEL_DEFAULT = 'ep-20250207172645-qxcjc';
 const AI_PROVIDER = { TongYi: 'TongYi', DouBao: 'DouBao', DeepSeek: 'DeepSeek' }
 
 const AI_ACTION = {
-    async chatCode (aiProvider, messages, language) {
+    async askAI (aiProvider, messages) {
         return await requestAIService(aiProvider, {
             temperature: 0.5, stream: true,
             messages: [

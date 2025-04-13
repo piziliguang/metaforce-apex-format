@@ -23,18 +23,18 @@ app.post('/flow/analyze', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/chat', jsonParser, async (req, res) => {
-    let { method, data, code, language = 'apex' } = req.body;
+    let { method, data, code } = req.body;
     try {
         if (code) data = code;
 
-        if (method == 'chatCode') {
-            let streamResponse = await AI_ACTION.chatCode(AI_PROVIDER.DeepSeek, data, language);
-            let responseMessage = "";
+        if (method == 'askAI' || method == 'chatCode') {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.setHeader('Transfer-Encoding', 'chunked');
+            let streamResponse = await AI_ACTION.askAI(AI_PROVIDER.DeepSeek, data);
             for await (const part of streamResponse) {
-                responseMessage += part.choices[0]?.delta?.content || '';
+                res.write(part.choices[0]?.delta?.content || '');
             }
-            let isInValidReponse = responseMessage.includes('you can only ask questions related to Salesforce');
-            res.json({ isSucceeded: !isInValidReponse, data: responseMessage });
+            res.end();
         } else if (method == 'optimizeCode') {
             res.json({ isSucceeded: true, data: await AI_ACTION.optimizeCode(AI_PROVIDER.DeepSeek, data) });
         } else if (method == 'documentCode') {
