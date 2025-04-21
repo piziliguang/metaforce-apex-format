@@ -225,12 +225,13 @@ async function requestAIService (aiProvider, aiParams = {}) {
 
     if (aiParams.stream) {
         return completion;
-    } else if (newContent.includes('-$$-')) {
-        let newContent = completion.choices[0].message.content;
-        return newContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
     } else {
         let newContent = completion.choices[0].message.content;
-        return newContent.split('\n').slice(1, -1).join('\n');
+        if (newContent.includes('-$$-')) {
+            return newContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
+        } else {
+            return newContent.split('\n').slice(1, -1).join('\n');
+        }
     }
 }
 
