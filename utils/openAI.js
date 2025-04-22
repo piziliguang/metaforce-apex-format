@@ -16,7 +16,7 @@ const AI_PROVIDER = { TongYi: 'TongYi', DouBao: 'DouBao', DeepSeek: 'DeepSeek' }
 const AI_ACTION = {
     async askAI (aiProvider, messages) {
         return await requestAIService(aiProvider, {
-            temperature: 0.5, stream: true,
+            temperature: 1.3, stream: true,
             messages: [
                 {
                     "role": "system", "content": `You are an expert Senior Salesforce Developer and Architect with deep knowledge of Salesforce technologies, including Apex, javascript, Lightning Web Components (LWC), Visualforce, and Salesforce best practices.
