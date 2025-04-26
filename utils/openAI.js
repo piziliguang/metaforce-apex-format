@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 const DEEPSEEK_API_KEY = 'sk-ca24d80d455c4bb285de9a7a33ed02f8';
 const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/';
+const DEEPSEEK_API_ENDPOINT_BETA = 'https://api.deepseek.com/beta';
 const DEEPSEEK_API_MODEL_DEFAULT = 'deepseek-chat'; // deepseek-v3
 
 const TONGYI_API_KEY = 'sk-f2265729ffb1488c97e920de3760466c';
@@ -12,10 +13,11 @@ const DOUBAO_API_ENDPOINT = 'https://ark.cn-beijing.volces.com/api/v3';
 const DOUBAO_API_MODEL_DEFAULT = 'ep-20250207172645-qxcjc';
 
 const AI_PROVIDER = { TongYi: 'TongYi', DouBao: 'DouBao', DeepSeek: 'DeepSeek' }
+const AI_COMPLETION_TYPE = { Chat: 'Chat', Fill_In_Middle: 'Fill_In_Middle' }
 
 const AI_ACTION = {
     async askAI (aiProvider, messages) {
-        return await requestAIService(aiProvider, {
+        return await requestAIService(aiProvider, AI_COMPLETION_TYPE.Chat, {
             temperature: 1.3, stream: true,
             messages: [
                 {
@@ -52,12 +54,42 @@ public static List<String> sortStringList(List<String> strings) {
         });
     },
 
+    async completeCode (aiProvider, { prefix, suffix, lang }) {
+        return await requestAIService(aiProvider, AI_COMPLETION_TYPE.Fill_In_Middle, {
+            model: 'deepseek-coder', temperature: 1, max_tokens: 256,
+            prompt: `As a senior salesforce architect, please complete the following salesforce ${lang} code logic. \n\n` + prefix, suffix,
+        });
+    },
+
+    async assistCode (aiProvider, { prefix, suffix, selection, command, lang }) {
+        let langText = lang ? `Salesforce ${lang} code` : 'text';
+        return await requestAIService(aiProvider, AI_COMPLETION_TYPE.Chat, {
+            temperature: 1.3,
+            messages: [
+                {
+                    "role": "system", "content": "Act as a seasoned Salesforce Developer. "
+                },
+                {
+                    "role": "user", "content": `
+You should answer the user's question (USERQUESTION) for the selected ${langText} (USERSELECTION), use the USERDOCUMENT as context if needed.
+If the USERSELECTION is blank, output the statement "You have to select some code lines."
+
+<USERDOCUMENT>${prefix}<USERSELECTION>${selection}</USERSELECTION>${suffix}</USERDOCUMENT>
+
+USERQUESTION: ${command}
+
+Output the answer only, do not explain.`.trim()
+                }
+            ]
+        });
+    },
+
     async optimizeCode (aiProvider, code) {
-        return await requestAIService(aiProvider, {
+        let aiResponseContent = await requestAIService(aiProvider, AI_COMPLETION_TYPE.Chat, {
             temperature: 0.5,
             messages: [
                 {
-                    "role": "system", "content": `Act as a seasoned Salesforce architect. Your task is to analyze and optimize the provided Salesforce code while preserving its original structure. Follow these rules meticulously:
+                    "role": "system", "content": `Act as a Salesforce architect. Your task is to analyze and optimize the provided Salesforce code while preserving its original structure. Follow these rules meticulously:
 1. Code Optimization Logic
     - Apex Code:
         - Apply Java coding conventions (e.g., ternary operators, loop optimizations, guard clauses).
@@ -93,10 +125,11 @@ public static List<String> sortStringList(List<String> strings) {
                 { "role": "user", "content": code }
             ]
         });
+        return aiResponseContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
     },
 
     async generateApexTest (aiProvider, code) {
-        return await requestAIService(aiProvider, {
+        let aiResponseContent = await requestAIService(aiProvider, AI_COMPLETION_TYPE.Chat, {
             messages: [
                 {
                     "role": "system", "content": `Act as a seasoned Salesforce Developer. Your task is to generate a robust Apex test class for the provided Apex code. Follow these requirements strictly:
@@ -147,11 +180,12 @@ private class DemoControllerTest {
                 { "role": "user", "content": code }
             ]
         });
+        return aiResponseContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
     },
 
     async documentCode (aiProvider, developerName, code) {
         let currDate = new Date().toISOString().split('T')[0];
-        return await requestAIService(aiProvider, {
+        let aiResponseContent = await requestAIService(aiProvider, AI_COMPLETION_TYPE.Chat, {
             temperature: 0.2,
             messages: [
                 {
@@ -199,13 +233,16 @@ Prioritize accuracy in parameter/return type detection. Use Apex syntax awarenes
                 { "role": "user", "content": code }
             ]
         });
+        return aiResponseContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
     }
 }
 
-async function requestAIService (aiProvider, aiParams = {}) {
-    let aiClient = null, aiModel = null;
+//completionType = Chat/FIM
+async function requestAIService (aiProvider, completionType = AI_COMPLETION_TYPE.Chat, aiParams = {}) {
+    let aiClient = null, aiModel = null, isFillInMiddle = completionType == AI_COMPLETION_TYPE.Fill_In_Middle;
     if (aiProvider == AI_PROVIDER.DeepSeek) {
-        aiClient = new OpenAI({ apiKey: DEEPSEEK_API_KEY, baseURL: DEEPSEEK_API_ENDPOINT });
+        let baseURL = isFillInMiddle ? DEEPSEEK_API_ENDPOINT_BETA : DEEPSEEK_API_ENDPOINT;
+        aiClient = new OpenAI({ apiKey: DEEPSEEK_API_KEY, baseURL });
         aiModel = DEEPSEEK_API_MODEL_DEFAULT;
     }
     else if (aiProvider == AI_PROVIDER.TongYi) {
@@ -216,21 +253,21 @@ async function requestAIService (aiProvider, aiParams = {}) {
         aiClient = new OpenAI({ apiKey: DOUBAO_API_KEY, baseURL: DOUBAO_API_ENDPOINT });
         aiModel = DOUBAO_API_MODEL_DEFAULT;
     }
-
     console.log(`AI Provider: ${aiProvider}, Model: ${aiModel}`);
-    let completion = await aiClient.chat.completions.create({
-        model: aiModel,
-        ...aiParams
-    });
 
-    if (aiParams.stream) {
-        return completion;
+    if (isFillInMiddle) {
+        let completion = await aiClient.completions.create({ model: aiModel, ...aiParams });
+        return completion.choices[0].text;
     } else {
-        let newContent = completion.choices[0].message.content;
-        if (newContent.includes('-$$-')) {
-            return newContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
+        let completion = await aiClient.chat.completions.create({
+            model: aiModel,
+            ...aiParams
+        });
+
+        if (aiParams.stream) {
+            return completion;
         } else {
-            return newContent.split('\n').slice(1, -1).join('\n');
+            return completion.choices[0].message.content.trim();
         }
     }
 }

@@ -23,11 +23,9 @@ app.post('/flow/analyze', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/chat', jsonParser, async (req, res) => {
-    let { method, data, code } = req.body;
+    let { method, data } = req.body;
     try {
-        if (code) data = code;
-
-        if (method == 'askAI' || method == 'chatCode') {
+        if (method == 'askAI') {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.setHeader('Transfer-Encoding', 'chunked');
             let streamResponse = await AI_ACTION.askAI(AI_PROVIDER.DeepSeek, data);
@@ -35,6 +33,10 @@ app.post('/ai/chat', jsonParser, async (req, res) => {
                 res.write(part.choices[0]?.delta?.content || '');
             }
             res.end();
+        } else if (method == 'completeCode') {
+            res.json({ isSucceeded: true, data: await AI_ACTION.completeCode(AI_PROVIDER.DeepSeek, data) });
+        } else if (method == 'assistCode') {
+            res.json({ isSucceeded: true, data: await AI_ACTION.assistCode(AI_PROVIDER.DeepSeek, data) });
         } else if (method == 'optimizeCode') {
             res.json({ isSucceeded: true, data: await AI_ACTION.optimizeCode(AI_PROVIDER.DeepSeek, data) });
         } else if (method == 'documentCode') {
