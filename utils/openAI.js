@@ -55,8 +55,9 @@ public static List<String> sortStringList(List<String> strings) {
     },
 
     async completeCode (aiProvider, { prefix, suffix, lang }) {
-        let aiContext = `As a senior salesforce architect, please complete the following salesforce ${lang} code.`;
-        if (lang == 'SOQL') aiContext = '';
+        let aiContext = '';
+        /* if (lang == 'SOQL') aiContext = '';
+        else aiContext = `As a senior salesforce architect, please complete the following salesforce ${lang} code.`; */
         return await requestAIService(aiProvider, AI_COMPLETION_TYPE.Fill_In_Middle, {
             model: 'deepseek-coder', temperature: 1, max_tokens: 256,
             prompt: aiContext + prefix, suffix,
