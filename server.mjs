@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 
-import { AI_PROVIDER, AI_ACTION } from './utils/openAI.js';
+import { AI_ACTION } from './utils/openAI.js';
 import { analyzeFlow } from './utils/analyzeFlow.js';
 import { analyzeCode } from './utils/analyzeCode.js';
 import { formatApex } from './utils/formatApex.js';
@@ -23,28 +23,22 @@ app.post('/flow/analyze', jsonParser, async (req, res) => {
 });
 
 app.post('/ai/chat', jsonParser, async (req, res) => {
-    let { method, data } = req.body;
+    let { method, files, data } = req.body;
     try {
         if (method == 'askAI') {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.setHeader('Transfer-Encoding', 'chunked');
-            let streamResponse = await AI_ACTION.askAI(AI_PROVIDER.DeepSeek, data);
+            let streamResponse = await AI_ACTION.askAI(files, data);
             for await (const part of streamResponse) {
                 res.write(part.choices[0]?.delta?.content || '');
             }
             res.end();
         } else if (method == 'completeCode') {
-            res.json({ isSucceeded: true, data: await AI_ACTION.completeCode(AI_PROVIDER.DeepSeek, data) });
-        } else if (method == 'assistCode') {
-            res.json({ isSucceeded: true, data: await AI_ACTION.assistCode(AI_PROVIDER.DeepSeek, data) });
-        } else if (method == 'optimizeCode') {
-            res.json({ isSucceeded: true, data: await AI_ACTION.optimizeCode(AI_PROVIDER.DeepSeek, data) });
+            res.json({ isSucceeded: true, data: await AI_ACTION.completeCode(data) });
         } else if (method == 'documentCode') {
-            res.json({ isSucceeded: true, data: await AI_ACTION.documentCode(AI_PROVIDER.DeepSeek, req.body.developerName, data) });
-        } else if (method == 'generateApexTest') {
-            res.json({ isSucceeded: true, data: await AI_ACTION.generateApexTest(AI_PROVIDER.DeepSeek, data) });
+            res.json({ isSucceeded: true, data: await AI_ACTION.documentCode(req.body.developerName, data) });
         } else {
-            res.json({ isSucceeded: false, data: 'AI service is not available yet, stay tuned.' });
+            res.json({ isSucceeded: false, data: `We're upgrading our AI services, stay tuned.` });
         }
     } catch (ex) {
         res.json({ isSucceeded: false, data: ex?.error?.message || ex?.message });
