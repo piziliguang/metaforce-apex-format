@@ -35,12 +35,22 @@ app.post('/ai/chat', jsonParser, async (req, res) => {
                 res.write(part.choices[0]?.delta?.content || '');
             }
             res.end();
+        } else if (method == 'convertAudio2Text') {
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Transfer-Encoding', 'chunked');
+            let streamResponse = await AI_ACTION.convertAudio2Text(data);
+            streamResponse.on('data', data => {
+                data = data.toString();
+                if (data.includes('HTTP_STATUS/200')) {
+                    let outputObj = JSON.parse(data.split('data:')[1]);
+                    res.write(outputObj.output.choices[0].message.content[0].text);
+                }
+            });
+            streamResponse.on('end', () => { res.end(); });
         } else if (method == 'completeCode') {
             res.json({ isSucceeded: true, data: await AI_ACTION.completeCode(data) });
         } else if (method == 'documentCode') {
             res.json({ isSucceeded: true, data: await AI_ACTION.documentCode(req.body.developerName, data) });
-        } else if (method == 'convertAudio2Text') {
-            res.json({ isSucceeded: true, data: await AI_ACTION.convertAudio2Text(data) });
         } else {
             res.json({ isSucceeded: false, data: `We're upgrading our AI services, stay tuned.` });
         }

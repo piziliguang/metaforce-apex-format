@@ -106,6 +106,7 @@ Prioritize accuracy in parameter/return type detection. Use Apex syntax awarenes
     },
 
     async convertAudio2Text (base64Blob) {
+        //http://quasar-metaforce-dev-ed.my.salesforce-sites.com/sfc/servlet.shepherd/document/download/069Ig00000Ao2iaIAB
         let audioFileName = `${Date.now()}.wav`, audioPath = path.resolve(`cache/${audioFileName}`);
         await outputFile(audioPath, base64Blob, 'base64');
         try {
@@ -116,16 +117,21 @@ Prioritize accuracy in parameter/return type detection. Use Apex syntax awarenes
                     "input": {
                         "messages": [
                             { "role": "user", "content": [{ "audio": `http://proxy.metaforce.ltd:3000/${audioFileName}` }] }
+                            /* { "role": "user", "content": [{ "audio": `http://quasar-metaforce-dev-ed.my.salesforce-sites.com/sfc/servlet.shepherd/document/download/069Ig00000Ao2iaIAB` }] } */
                         ]
+                    },
+                    "parameters": {
+                        "incremental_output": true
                     }
                 }, {
+                responseType: "stream",
                 headers: {
                     "Authorization": `Bearer ${TONGYI_API_KEY}`,
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "X-DashScope-SSE": "enable"
                 }
             });
-            result = result.data;
-            return result.output.choices[0].message.content[0].text;
+            return result.data;
         } catch (ex) {
             await removeremove(audioPath);
             throw ex;
