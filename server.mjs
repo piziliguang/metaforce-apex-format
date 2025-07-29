@@ -10,6 +10,8 @@ const port = 3000;
 const app = express();
 const jsonParser = bodyParser.json({ limit: '10mb' });
 
+app.use(express.static('cache'));
+
 app.post('/apex/format', jsonParser, async (req, res) => {
     res.json(await formatApex(req.body));
 });
@@ -37,6 +39,8 @@ app.post('/ai/chat', jsonParser, async (req, res) => {
             res.json({ isSucceeded: true, data: await AI_ACTION.completeCode(data) });
         } else if (method == 'documentCode') {
             res.json({ isSucceeded: true, data: await AI_ACTION.documentCode(req.body.developerName, data) });
+        } else if (method == 'convertAudio2Text') {
+            res.json({ isSucceeded: true, data: await AI_ACTION.convertAudio2Text(data) });
         } else {
             res.json({ isSucceeded: false, data: `We're upgrading our AI services, stay tuned.` });
         }

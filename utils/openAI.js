@@ -1,4 +1,8 @@
 import OpenAI from 'openai';
+import axios from "axios";
+import path from 'node:path';
+import { outputFile, remove } from 'fs-extra/esm'
+
 const DEEPSEEK_API_KEY = 'sk-ca24d80d455c4bb285de9a7a33ed02f8';
 const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/';
 const DEEPSEEK_API_ENDPOINT_BETA = 'https://api.deepseek.com/beta';
@@ -44,7 +48,6 @@ const AI_ACTION = {
         let completion = await aiClient.chat.completions.create(aiParams);
         return completion.choices[0].message.content;
     },
-
 
     async documentCode (developerName, code) {
         let aiClient = new OpenAI({ apiKey: DOUBAO_API_KEY, baseURL: DOUBAO_API_MODEL_ENDPOINT });
@@ -100,6 +103,33 @@ Prioritize accuracy in parameter/return type detection. Use Apex syntax awarenes
         let completion = await aiClient.chat.completions.create(aiParams);
         let aiResponseContent = completion.choices[0].message.content.trim();
         return aiResponseContent.split('-$$-')[1].replace(/^\n|\n$/g, '');
+    },
+
+    async convertAudio2Text (base64Blob) {
+        let audioFileName = `${Date.now()}.wav`, audioPath = path.resolve(`cache/${audioFileName}`);
+        await outputFile(audioPath, base64Blob, 'base64');
+        try {
+            let result = await axios.post(
+                'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
+                {
+                    "model": "qwen-audio-asr",
+                    "input": {
+                        "messages": [
+                            { "role": "user", "content": [{ "audio": `http://proxy.metaforce.ltd:3000/${audioFileName}` }] }
+                        ]
+                    }
+                }, {
+                headers: {
+                    "Authorization": `Bearer ${TONGYI_API_KEY}`,
+                    "Content-Type": "application/json"
+                }
+            });
+            result = result.data;
+            return result.output.choices[0].message.content[0].text;
+        } catch (ex) {
+            await removeremove(audioPath);
+            throw ex;
+        }
     }
 }
 export { AI_ACTION }
