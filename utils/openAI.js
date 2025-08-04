@@ -133,7 +133,7 @@ Prioritize accuracy in parameter/return type detection. Use Apex syntax awarenes
             });
             return result.data;
         } catch (ex) {
-            await removeremove(audioPath);
+            await remove(audioPath);
             throw ex;
         }
     }

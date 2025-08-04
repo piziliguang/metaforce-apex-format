@@ -59,6 +59,12 @@ app.post('/ai/chat', jsonParser, async (req, res) => {
     }
 });
 
+app.post('/org/backup', jsonParser, async (req, res) => {
+    // TODO: 
+    // generate zip file and uncompress the zip, 
+    // Search zip folder and return results.
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
